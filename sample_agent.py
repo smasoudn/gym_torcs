@@ -24,7 +24,7 @@ class Agent(object):
                 So you may need to remove.
             """
             print(vision.shape)
-            """
+            
             img = np.ndarray((64,64,3))
             for i in range(3):
                 img[:, :, i] = 255 - vision[:, i].reshape((64, 64))
@@ -32,5 +32,5 @@ class Agent(object):
             plt.imshow(img, origin='lower')
             plt.draw()
             plt.pause(0.001)
-            """
+            
         return np.tanh(np.random.randn(self.dim_action)) # random action

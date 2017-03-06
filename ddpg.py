@@ -7,7 +7,7 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.optimizers import Adam
 import tensorflow as tf
-from keras.engine.training import collect_trainable_weights
+#from keras.engine.training import collect_trainable_weights
 import json
 
 from ReplayBuffer import ReplayBuffer
@@ -24,7 +24,7 @@ def playGame(train_indicator=0):    #1 means Train, 0 means simply Run
     GAMMA = 0.99
     TAU = 0.001     #Target Network HyperParameters
     LRA = 0.0001    #Learning rate for Actor
-    LRC = 0.001     #Lerning rate for Critic
+    LRC = 0.001     #Lerning rate for Critic    
 
     action_dim = 3  #Steering/Acceleration/Brake
     state_dim = 29  #of sensors input
@@ -134,8 +134,9 @@ def playGame(train_indicator=0):    #1 means Train, 0 means simply Run
             total_reward += r_t
             s_t = s_t1
         
-            print("Episode", i, "Step", step, "Action", a_t, "Reward", r_t, "Loss", loss)
-        
+            #print("Episode", i, "Step", step, "Action", a_t, "Reward", r_t, "Loss", loss)
+            print("Episode", i, "Step", step, "Reward", r_t)
+
             step += 1
             if done:
                 break
