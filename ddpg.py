@@ -9,6 +9,7 @@ from keras.optimizers import Adam
 import tensorflow as tf
 #from keras.engine.training import collect_trainable_weights
 import json
+import collections as col
 
 from ReplayBuffer import ReplayBuffer
 from ActorNetwork import ActorNetwork
@@ -18,7 +19,37 @@ import timeit
 
 OU = OU()       #Ornstein-Uhlenbeck Process
 
-def playGame(train_indicator=0):    #1 means Train, 0 means simply Run
+#########For get ob datas of other cars only###############################################
+def make_observaton(raw_obs):
+    names = ['focus',
+             'speedX', 'speedY', 'speedZ', 'angle', 'damage',
+             'opponents',
+             'rpm',
+             'track',
+             'trackPos',
+             'wheelSpinVel',
+             'toLeft', 'toRight', 'trackWidth',
+             'distFromStart']
+    Observation = col.namedtuple('Observaion', names)
+    return Observation(focus=np.array(raw_obs['focus'], dtype=np.float32)/200.,
+                       speedX=np.array(raw_obs['speedX'], dtype=np.float32)/300.0,
+                       speedY=np.array(raw_obs['speedY'], dtype=np.float32)/300.0,
+                       speedZ=np.array(raw_obs['speedZ'], dtype=np.float32)/300.0,
+                       angle=np.array(raw_obs['angle'], dtype=np.float32)/3.1416,
+                       damage=np.array(raw_obs['damage'], dtype=np.float32),
+                       opponents=np.array(raw_obs['opponents'], dtype=np.float32)/200.,
+                       rpm=np.array(raw_obs['rpm'], dtype=np.float32)/10000,
+                       track=np.array(raw_obs['track'], dtype=np.float32)/200.,
+                       trackPos=np.array(raw_obs['trackPos'], dtype=np.float32)/1.,
+                       wheelSpinVel=np.array(raw_obs['wheelSpinVel'], dtype=np.float32),
+                       toLeft=np.array(raw_obs['toLeft'], dtype=np.float32),
+                       toRight=np.array(raw_obs['toRight'], dtype=np.float32),
+                       trackWidth=np.array(raw_obs['trackWidth'], dtype=np.float32),
+                       distFromStart=np.array(raw_obs['distFromStart'], dtype=np.float32))
+###########################################################################################
+
+
+def playGame(train_indicator=1):    #1 means Train, 0 means simply Run
     BUFFER_SIZE = 100000
     BATCH_SIZE = 32
     GAMMA = 0.99
@@ -26,6 +57,10 @@ def playGame(train_indicator=0):    #1 means Train, 0 means simply Run
     LRA = 0.0001    #Learning rate for Actor
     LRC = 0.001     #Lerning rate for Critic    
 
+    ########3112~3123
+    #car_ports = [3112, 3113, 3114, 3115, 3116, 3117, 3118, 3119, 3120, 3121, 3122, 3123]
+    car_ports = []
+    
     action_dim = 3  #Steering/Acceleration/Brake
     state_dim = 29  #of sensors input
 
@@ -54,7 +89,7 @@ def playGame(train_indicator=0):    #1 means Train, 0 means simply Run
     buff = ReplayBuffer(BUFFER_SIZE)    #Create replay buffer
 
     # Generate a Torcs environment
-    env = TorcsEnv(vision=vision, throttle=True,gear_change=False)
+    env = TorcsEnv(vision=vision, throttle=True,gear_change=False, car_ports=car_ports)
 
     #Now load the weight
     print("Now we load the weight")

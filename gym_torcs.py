@@ -12,15 +12,16 @@ import time
 
 class TorcsEnv:
     terminal_judge_start = 100  # If after 100 timestep still no progress, terminated
-    termination_limit_progress = 5  # [km/h], episode terminates if car is running slower than this limit
+    termination_limit_progress = 500  # [km/h], episode terminates if car is running slower than this limit
     default_speed = 50
 
     initial_reset = True
 
-    def __init__(self, vision=False, throttle=False, gear_change=False):
+    def __init__(self, vision=False, throttle=False, gear_change=False, car_ports=[]):
         self.vision = vision
         self.throttle = throttle
         self.gear_change = gear_change
+        self.car_ports = car_ports
 
         self.initial_run = True
 
@@ -144,7 +145,7 @@ class TorcsEnv:
         # Termination judgement #########################
         episode_terminate = False
         if (abs(track.any()) > 1 or abs(trackPos) > 1):  # Episode is terminated if the car is out of track
-            reward = -200
+            reward = -2
             episode_terminate = True
             client.R.d['meta'] = True
 
@@ -180,9 +181,14 @@ class TorcsEnv:
                 print("### TORCS is RELAUNCHED ###")
 
         # Modify here if you use multiple tracks in the environment
+        self.clients = [snakeoil3.Client(p=port) for port in self.car_ports]
+        for client in self.clients:
+            client.MAX_STEPS = np.inf
         self.client = snakeoil3.Client(p=3101, vision=self.vision)  # Open new UDP in vtorcs
         self.client.MAX_STEPS = np.inf
 
+        for client in self.clients:
+            client.get_servers_input()
         client = self.client
         client.get_servers_input()  # Get the initial input from torcs
 
